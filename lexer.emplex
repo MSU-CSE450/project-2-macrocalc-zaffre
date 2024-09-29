@@ -1,0 +1,15 @@
+-COMMENT //.*
+VAR var
+PRINT print
+ASSIGN =
+MATH [+\-/*]
+-WHITESPACE [ \t\n]
+NUMBER ([0-9]*)|([0-9]*"."[0-9]*)
+STRING \"(([^"])|(\\\"))*\"
+INCOMPLETE_STRING \"[^"]*\n
+ID [a-zA-Z_0-9]*
+OPEN_COMMENT /\*
+CLOSE_COMMENT \*/
+END_OF_LINE ;
+OPEN_SCOPE {
+CLOSE_SCOPE }

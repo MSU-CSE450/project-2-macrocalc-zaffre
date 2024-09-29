@@ -1,0 +1,18 @@
+HelloParsing VAR : var
+Parsing END_OF_LINE : ;
+Parsing ID : a
+Parsing END_OF_LINE : ;
+Parsing PRINT : print
+Parsing _ASCII_ : )
+Parsing END_OF_LINE : ;
+Running empty
+Running empty
+Running 0
+Running 2
+Running assign
+Running 0
+Running 0
+Running 3
+Running 0
+Running 0
+Running 0
