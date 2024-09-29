@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "compiler.hpp"
+#include "error.hpp"
 #include "logger.hpp"
 
 extern bool shouldLog;
@@ -31,7 +32,10 @@ int main(int argc, char *argv[]) {
   }
 
   auto compiler = Compiler(in_file);
-
-  compiler.parse();
-  compiler.execute();
+  try {
+    compiler.parse();
+    compiler.execute();
+  } catch (const Err &e) {
+    exit(1);
+  }
 }

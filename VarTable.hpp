@@ -26,7 +26,7 @@ public:
 
   std::shared_ptr<Var> AddVar(std::size_t id, int lineNumber, std::string name, double value = 0) {
     if (HasVar(name)) {
-      Err(lineNumber, "Variable" + name + " already exists");
+      throw Err(lineNumber, "Variable" + name + " already exists");
     }
 
     variables[name] = std::make_shared<Var>(Var{
@@ -37,7 +37,7 @@ public:
 
   int SetVar(int lineNumber, std::string name, double value) {
     if (!HasVar(name)) {
-      Err(lineNumber, "Variable" + name + " was not declared in this scope");
+      throw Err(lineNumber, "Variable" + name + " was not declared in this scope");
     }
 
     variables[name]->value = value;
@@ -46,7 +46,7 @@ public:
 
   const Var &GetVar(int lineNumber, std::string name) const {
     if (!HasVar(name)) {
-      Err(lineNumber, "Variable" + name + " was not declared in this scope");
+      throw Err(lineNumber, "Variable" + name + " was not declared in this scope");
     }
 
     return *(variables.at(name));

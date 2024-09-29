@@ -5,7 +5,7 @@ PROJECT := Project2
 CXX := c++
 
 # Flags to ALWAYs use
-CFLAGS_all := -Wall -Wextra -std=c++20
+CFLAGS_all := -Wall -Wextra -std=c++20 -isystem lexer.hpp
 
 # Flags based on compilation type.
 #   Default flags turn on optimizations

@@ -53,7 +53,7 @@ public:
     if (variables.at(id).use_count() > 1) {
       return variables.at(id)->value;
     }
-    Err(lineNumber, "Variable " + variables.at(id)->name + "does not exist");
+    throw Err(lineNumber, "Variable " + variables.at(id)->name + "does not exist");
   }
 
   void SetValue(int lineNumber, size_t id, double value) {
@@ -61,14 +61,14 @@ public:
       variables.at(id)->value = value;
       return;
     }
-    Err(lineNumber, "Variable " + variables.at(id)->name + "does not exist");
+    throw Err(lineNumber, "Variable " + variables.at(id)->name + "does not exist");
   }
 
   /// Set/Get by name
   double GetValue(int lineNumber, std::string name) const {
     auto scope = GetScope(name);
     if (!IsValidScope(scope)) {
-      Err(lineNumber, "Variable " + name + "does not exist");
+      throw Err(lineNumber, "Variable " + name + "does not exist");
     }
 
     return scope->GetVar(lineNumber, name).value;
@@ -77,7 +77,7 @@ public:
   std::size_t GetIdByName(int lineNumber, std::string name) {
     auto scope = GetScope(name);
     if (!IsValidScope(scope)) {
-      Err(lineNumber, "Variable " + name + "does not exist");
+      throw Err(lineNumber, "Variable " + name + "does not exist");
     }
 
     return scope->GetVar(lineNumber, name).id;

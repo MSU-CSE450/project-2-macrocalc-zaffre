@@ -31,8 +31,7 @@ private:
       return tokens[++current_token];
     }
 
-    Err(-1, "Unexpected end of file");
-    return emplex::Token{};
+    throw Err(tokens[current_token].line_id, "Unexpected end of file"); // TODO Fix line number
   }
 
   emplex::Token GetCurrent() {
@@ -40,7 +39,7 @@ private:
       return tokens[current_token];
     }
 
-    Err(-1, "Unexpected end of file");
+    throw Err(tokens[current_token - 1].line_id, "Unexpected end of file"); // TODO Fix line number
     return emplex::Token{};
   }
 
@@ -83,7 +82,7 @@ public:
     auto assingToken = GetCurrent();
     auto varName = GetNext();
     if (varName != Lexer::ID_ID) {
-      Err(varName.line_id, "'var' must be proceeded by variable name");
+      throw Err(varName.line_id, "'var' must be proceeded by variable name");
     }
 
     size_t varId = table.AddVar(varName.lexeme, varName.line_id);
@@ -101,7 +100,7 @@ public:
       node->AddChild(expression);
       return node;
     } else {
-      Err(varName.line_id, "Variable must be proceded by ; or =");
+      throw Err(varName.line_id, "Variable must be proceded by ; or =");
     }
   }
 
@@ -116,7 +115,7 @@ public:
     auto printToken = GetCurrent();
     auto next = GetNext();
     if (next != '(') {
-      Err(next.line_id, "Expected (");
+      throw Err(next.line_id, "Expected (");
     }
 
     auto node = std::make_shared<ASTNode>(ASTNode(ASTNode::PRINT, printToken));
@@ -130,7 +129,7 @@ public:
     auto idToken = GetCurrent();
     auto assignToken = GetNext();
     if (assignToken != Lexer::ID_ASSIGN) {
-      Err(assignToken.line_id, "Expected expression");
+      throw Err(assignToken.line_id, "Expected expression");
     }
 
     auto node = std::make_shared<ASTNode>(ASTNode(ASTNode::ASSIGN, assignToken));
