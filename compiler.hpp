@@ -26,12 +26,11 @@ private:
   std::shared_ptr<ASTNode> root = std::make_shared<ASTNode>(ASTNode(ASTNode::Type::STATEMENT_BLOCK));
 
   // == HELPER ==
-  emplex::Token GetNext() {
-    if ((current_token + 1) < tokens.size()) {
-      return tokens[++current_token];
+  std::string TokenName(int id) const {
+    if (id > 0 && id < 128) {
+      return std::string("'") + static_cast<char>(id) + "'";
     }
-
-    throw Err(tokens[current_token].line_id, "Unexpected end of file"); // TODO Fix line number
+    return emplex::Lexer::TokenName(id);
   }
 
   emplex::Token GetCurrent() {
@@ -41,6 +40,50 @@ private:
 
     throw Err(tokens[current_token - 1].line_id, "Unexpected end of file"); // TODO Fix line number
     return emplex::Token{};
+  }
+
+  emplex::Token GetCurrent(int required_id, std::string err_message = "") {
+    if (GetCurrent() != required_id) {
+      if (err_message.size())
+        throw Err(GetCurrent(), err_message);
+      else {
+        throw Err(GetCurrent(),
+                  "Expected token type ", TokenName(required_id),
+                  ", but found ", TokenName(GetCurrent()));
+      }
+    }
+    return GetCurrent();
+  }
+
+  emplex::Token UseToken() { return tokens[current_token++]; }
+
+  emplex::Token UseToken(int required_id, std::string err_message = "") {
+    if (GetCurrent() != required_id) {
+      if (err_message.size())
+        throw Err(GetCurrent(), err_message);
+      else {
+        throw Err(GetCurrent(),
+                  "Expected token type ", TokenName(required_id),
+                  ", but found ", TokenName(GetCurrent()));
+      }
+    }
+    return UseToken();
+  }
+
+  bool UseTokenIf(int test_id) {
+    if (GetCurrent() == test_id) {
+      current_token++;
+      return true;
+    }
+    return false;
+  }
+
+  bool UseNextTokenIf(int test_id) {
+    if (current_token + 1 < tokens.size() && tokens[current_token + 1] == test_id) {
+      current_token++;
+      return true;
+    }
+    return false;
   }
 
   void MoveNext() {
@@ -81,9 +124,6 @@ public:
   std::shared_ptr<ASTNode> ParseStatement() {
     logger << "Parsing " << emplex::Lexer::TokenName(tokens.at(current_token)) << " : " << tokens.at(current_token).lexeme << std::endl;
     switch (tokens.at(current_token)) {
-      case Lexer::ID_END_OF_LINE:
-        MoveNext();
-        return std::make_shared<ASTNode>(ASTNode());
       case Lexer::ID_VAR:
         return ParseVar();
       case Lexer::ID_PRINT:
@@ -94,74 +134,74 @@ public:
         return ParseOpenScope();
       case Lexer::ID_CLOSE_SCOPE:
         return ParseCloseScope();
+      case Lexer::ID_END_OF_LINE:
       default:
-        return ParseExpression();
+        MoveNext();
+        return std::make_shared<ASTNode>(ASTNode());
     }
   }
 
   std::shared_ptr<ASTNode> ParseVar() {
-    auto assingToken = GetCurrent();
-    auto varName = GetNext();
-    if (varName != Lexer::ID_ID) {
-      throw Err(varName.line_id, "'var' must be proceeded by variable name");
-    }
+    auto assingToken = UseToken();
+    auto varName = GetCurrent(Lexer::ID_ID, "'var' must be proceeded by variable name");
 
     size_t varId = table.AddVar(varName.lexeme, varName.line_id);
 
-    auto next = GetNext();
-    if (next == Lexer::ID_END_OF_LINE) {
+    if (UseNextTokenIf(Lexer::ID_END_OF_LINE)) {
       return std::make_shared<ASTNode>(ASTNode{});
-    } else if (next == Lexer::ID_ASSIGN) {
-      auto expression = ParseExpression();
-      auto node = std::make_shared<ASTNode>(ASTNode(ASTNode::ASSIGN, assingToken));
-      auto var = std::make_shared<ASTNode>(ASTNode(ASTNode::VARIABLE, varName));
-      var->SetId(varId);
-
-      node->AddChild(var);
-      node->AddChild(expression);
-      return node;
-    } else {
-      throw Err(varName.line_id, "Variable must be proceded by ; or =");
     }
+
+    return ParseId();
   }
 
+  /**
+   * Expect to be at the start of the expression
+   */
   std::shared_ptr<ASTNode> ParseExpression() {
-    auto expressionStart = GetCurrent();
-    std::shared_ptr<ASTNode> node;
-    if (expressionStart == Lexer::ID_ID) {
-      node = std::make_shared<ASTNode>(ASTNode(ASTNode::VARIABLE, expressionStart));
-      node->SetId(table.GetIdByName(expressionStart.line_id, expressionStart.lexeme));
-    } else if (expressionStart == Lexer::ID_NUMBER) {
-      node = std::make_shared<ASTNode>(ASTNode(ASTNode::VALUE, expressionStart));
-      node->SetValue(std::stod(expressionStart.lexeme));
-    } else {
-      node = std::make_shared<ASTNode>(ASTNode());
-    }
+    logger << "Parsing expression" << std::endl;
+    std::shared_ptr<ASTNode> node = std::make_shared<ASTNode>(ASTNode(ASTNode::Type::EXPRESSION));
 
-    MoveNext();
+    auto term = ParseTerm();
+    node->AddChild(term);
+
     return node;
   }
 
-  std::shared_ptr<ASTNode> ParsePrint() {
-    auto printToken = GetCurrent();
-    auto next = GetNext();
-    if (next != '(') {
-      throw Err(next.line_id, "Expected (");
-    }
+  std::shared_ptr<ASTNode> ParseTerm() {
+    auto term = UseToken();
+    logger << "Parsing term " << term.lexeme << std::endl;
 
+    switch (term) {
+      case Lexer::ID_ID: {
+        auto node = std::make_shared<ASTNode>(ASTNode(ASTNode::VARIABLE, term));
+        node->SetId(table.GetIdByName(term.line_id, term.lexeme));
+        return node;
+      }
+      case Lexer::ID_NUMBER: {
+        auto node = std::make_shared<ASTNode>(ASTNode(ASTNode::VALUE, term));
+        node->SetValue(std::stod(term.lexeme));
+        return node;
+      }
+      default:
+        return std::make_shared<ASTNode>(ASTNode());
+    }
+  }
+
+  std::shared_ptr<ASTNode> ParsePrint() {
+    auto printToken = UseToken(Lexer::ID_PRINT);
+    auto next = UseToken('(');
     auto node = std::make_shared<ASTNode>(ASTNode(ASTNode::PRINT, printToken));
-    MoveNext();
-    auto expression = ParseExpression();
-    node->AddChild(expression);
+    do {
+      auto expression = ParseExpression();
+      node->AddChild(expression);
+    } while (UseTokenIf(','));
+
     return node;
   }
 
   std::shared_ptr<ASTNode> ParseId() {
-    auto idToken = GetCurrent();
-    auto assignToken = GetNext();
-    if (assignToken != Lexer::ID_ASSIGN) {
-      throw Err(assignToken.line_id, "Expected expression");
-    }
+    auto idToken = UseToken(Lexer::ID_ID);
+    auto assignToken = UseToken(Lexer::ID_ASSIGN);
 
     auto node = std::make_shared<ASTNode>(ASTNode(ASTNode::ASSIGN, assignToken));
 
@@ -169,9 +209,10 @@ public:
     var->SetId(table.GetIdByName(idToken, idToken.lexeme));
     node->AddChild(var);
 
-    MoveNext();
     auto expression = ParseExpression();
     node->AddChild(expression);
+
+    UseToken(Lexer::ID_END_OF_LINE);
     return node;
   }
 

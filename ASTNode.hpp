@@ -15,6 +15,7 @@ public:
   enum Type {
     EMPTY = 0,
     STATEMENT_BLOCK,
+    EXPRESSION,
     ASSIGN,
     VARIABLE,
     VALUE,
@@ -37,6 +38,7 @@ private:
   }
 
   void RunPrint(SymbolTable &symbols) {
+    logger << "Running print with children: " << child.size() << std::endl;
     for (auto children : child) {
       children->Run(symbols);
       children->PrintNode(std::cout, symbols);
@@ -44,8 +46,22 @@ private:
     std::cout << std::endl;
   }
 
+  void RunExpression(SymbolTable &symbols) {
+    logger << "Running expression" << std::endl;
+    child.at(0)->Run(symbols);
+    SetValue(child.at(0)->GetValue());
+  }
+
+  void RunVariable(SymbolTable &symbols) {
+    logger << "Running variable" << std::endl;
+    SetValue(symbols.GetValue(0, GetId()));
+  }
+
   void PrintNode(std::ostream &stream, SymbolTable &symbols) {
-    if (GetType() == ASTNode::Type::VALUE) {
+    if (GetType() == ASTNode::Type::EXPRESSION) {
+      RunExpression(symbols);
+      stream << GetValue();
+    } else if (GetType() == ASTNode::Type::VALUE) {
       stream << GetValue();
     } else if (GetType() == ASTNode::Type::VARIABLE) {
       stream << symbols.GetValue(0, GetId());
@@ -59,10 +75,6 @@ public:
   ASTNode(Type type, emplex::Token token)
       : type{type}, token(token) {};
 
-  // template <typename... Args>
-  // ASTNode AddChild(Args &&...args) {
-  //   child.emplace_back(args);
-  // }
   void AddChild(std::shared_ptr<ASTNode> node) {
     child.push_back(node);
   }
@@ -87,6 +99,12 @@ public:
         break;
       case Type::ASSIGN:
         RunAssign(symbols);
+        break;
+      case Type::EXPRESSION:
+        RunExpression(symbols);
+        break;
+      case Type::VARIABLE:
+        RunVariable(symbols);
         break;
       default:
         break;
