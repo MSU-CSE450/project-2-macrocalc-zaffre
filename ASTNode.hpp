@@ -70,14 +70,16 @@ public:
   // CODE TO EXECUTE THIS NODE (AND ITS CHILDREN, AS NEEDED).
   double Run(SymbolTable &symbols) {
     if (GetType() == Type::EMPTY || GetType() == Type::STATEMENT_BLOCK) {
-      logger << "Running " << GetType() << std::endl;
+      logger << "Running type: " << GetType() << std::endl;
       for (auto children : child) {
-        children->Run(symbols);
+        if (children != nullptr) {
+          children->Run(symbols);
+        }
       }
       return 1;
     }
 
-    logger << "Running " << token.line_id << std::endl;
+    logger << "Running line: " << token.line_id << std::endl;
 
     switch (type) {
       case Type::PRINT:
@@ -85,6 +87,7 @@ public:
         break;
       case Type::ASSIGN:
         RunAssign(symbols);
+        break;
       default:
         break;
     }
@@ -94,7 +97,9 @@ public:
 
   std::size_t GetId() const { return id; };
   double GetValue() const { return value; }
-  ASTNode::Type GetType() const { return type; }
+  ASTNode::Type GetType() const {
+    return type;
+  }
   void SetId(size_t newId) { id = newId; };
   void SetValue(double newValue) { value = newValue; };
 };

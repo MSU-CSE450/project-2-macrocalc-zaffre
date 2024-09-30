@@ -1,0 +1,39 @@
+HelloStarted parsing token scope. Current scope: 1
+Parsing VAR : var
+Parsing END_OF_LINE : ;
+Parsing ID : a
+Parsing END_OF_LINE : ;
+Parsing PRINT : print
+Parsing _ASCII_ : )
+Parsing END_OF_LINE : ;
+Parsing OPEN_SCOPE : {
+Started parsing token scope. Current scope: 2
+Parsing ID : a
+Parsing PRINT : print
+Parsing _ASCII_ : )
+Parsing END_OF_LINE : ;
+Parsing CLOSE_SCOPE : }
+Ended parsing token scope. Current scope: 1
+Parsing CLOSE_SCOPE : }
+Ended parsing token scope. Current scope: 0
+Running type: 1
+Running type: 0
+Running type: 0
+Running line: 2
+Running assign
+Running line: 2
+Running type: 0
+Running line: 3
+Running line: 3
+Running type: 0
+Running type: 0
+Running type: 1
+Running line: 6
+Running assign
+Running line: 6
+Running line: 7
+Running line: 7
+Running type: 0
+Running type: 0
+Running type: 0
+Running type: 0

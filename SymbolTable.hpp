@@ -50,10 +50,16 @@ public:
 
   /// Set/Get by id
   double GetValue(int lineNumber, size_t id) const {
+    if (id >= variables.size()) {
+      throw Err(lineNumber, "Getting variable that does not exist");
+    }
     return variables.at(id)->value;
   }
 
   void SetValue(int lineNumber, size_t id, double value) {
+    if (id >= variables.size()) {
+      throw Err(lineNumber, "Setting variable that does not exist");
+    }
     variables.at(id)->value = value;
   }
 

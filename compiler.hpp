@@ -81,6 +81,9 @@ public:
   std::shared_ptr<ASTNode> ParseStatement() {
     logger << "Parsing " << emplex::Lexer::TokenName(tokens.at(current_token)) << " : " << tokens.at(current_token).lexeme << std::endl;
     switch (tokens.at(current_token)) {
+      case Lexer::ID_END_OF_LINE:
+        MoveNext();
+        return std::make_shared<ASTNode>(ASTNode());
       case Lexer::ID_VAR:
         return ParseVar();
       case Lexer::ID_PRINT:
@@ -123,8 +126,18 @@ public:
   }
 
   std::shared_ptr<ASTNode> ParseExpression() {
-    auto node = std::make_shared<ASTNode>(ASTNode(ASTNode::VALUE, emplex::Token{}));
-    node->SetValue(1);
+    auto expressionStart = GetCurrent();
+    std::shared_ptr<ASTNode> node;
+    if (expressionStart == Lexer::ID_ID) {
+      node = std::make_shared<ASTNode>(ASTNode(ASTNode::VARIABLE, expressionStart));
+      node->SetId(table.GetIdByName(expressionStart.line_id, expressionStart.lexeme));
+    } else if (expressionStart == Lexer::ID_NUMBER) {
+      node = std::make_shared<ASTNode>(ASTNode(ASTNode::VALUE, expressionStart));
+      node->SetValue(std::stod(expressionStart.lexeme));
+    } else {
+      node = std::make_shared<ASTNode>(ASTNode());
+    }
+
     MoveNext();
     return node;
   }

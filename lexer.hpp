@@ -1,5 +1,6 @@
 #ifndef EMPLEX_LEXER_HPP_INCLUDE_
 #define EMPLEX_LEXER_HPP_INCLUDE_
+
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -63,7 +64,7 @@ namespace emplex {
                                                              /* State 36 */ {-1, -1, -1, -1, -1, -1, -1, -1, -1, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 34, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 36, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35, 35},
                                                              /* State 37 */ {-1, -1, -1, 37, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}}};
     // DFA stop states (0 indicates NOT a stop)
-    static constexpr std::array<int, NUM_STATES> stop_id = {250, 250, 250, 249, 0, 251, 251, 248, 251, 250, 243, 252, 250, 250, 250, 242, 241, 250, 250, 254, 254, 250, 250, 250, 253, 253, 245, 255, 255, 248, 244, 246, 247, 0, 247, 0, 0, 246};
+    static constexpr std::array<int, NUM_STATES> stop_id = {249, 249, 249, 250, 0, 251, 251, 249, 251, 249, 243, 252, 246, 246, 246, 242, 241, 246, 246, 254, 254, 246, 246, 246, 253, 253, 245, 255, 255, 249, 244, 247, 248, 0, 248, 0, 0, 247};
 
   public:
     constexpr static int SYMBOL_START = 2;     ///< Symbol to indicate a start of line.
@@ -115,11 +116,11 @@ namespace emplex {
     static constexpr int ID_END_OF_LINE = 243;       // Regex: ;
     static constexpr int ID_CLOSE_COMMENT = 244;     // Regex: \*/
     static constexpr int ID_OPEN_COMMENT = 245;      // Regex: /\*
-    static constexpr int ID_INCOMPLETE_STRING = 246; // Regex: \"[^"]*\n
-    static constexpr int ID_STRING = 247;            // Regex: \"(([^"])|(\\\"))*\"
-    static constexpr int ID_NUMBER = 248;            // Regex: ([0-9]*)|([0-9]*"."[0-9]*)
-    static constexpr int ID_WHITESPACE = 249;        // Regex: [ \t\n]
-    static constexpr int ID_ID = 250;                // Regex: [a-zA-Z_0-9]*
+    static constexpr int ID_ID = 246;                // Regex: [a-zA-Z_0-9]*
+    static constexpr int ID_INCOMPLETE_STRING = 247; // Regex: \"[^"]*\n
+    static constexpr int ID_STRING = 248;            // Regex: \"(([^"])|(\\\"))*\"
+    static constexpr int ID_NUMBER = 249;            // Regex: ([0-9]*)|([0-9]*"."[0-9]*)
+    static constexpr int ID_WHITESPACE = 250;        // Regex: [ \t\n]
     static constexpr int ID_MATH = 251;              // Regex: [+\-/*]
     static constexpr int ID_ASSIGN = 252;            // Regex: =
     static constexpr int ID_PRINT = 253;             // Regex: print
@@ -144,15 +145,15 @@ namespace emplex {
         case 245:
           return "OPEN_COMMENT";
         case 246:
-          return "INCOMPLETE_STRING";
-        case 247:
-          return "STRING";
-        case 248:
-          return "NUMBER";
-        case 249:
-          return "WHITESPACE";
-        case 250:
           return "ID";
+        case 247:
+          return "INCOMPLETE_STRING";
+        case 248:
+          return "STRING";
+        case 249:
+          return "NUMBER";
+        case 250:
+          return "WHITESPACE";
         case 251:
           return "MATH";
         case 252:
@@ -172,7 +173,7 @@ namespace emplex {
     static constexpr bool IgnoreToken(int id) {
       switch (id) {
         case 0:
-        case 249:
+        case 250:
         case 255:
           return true;
         default:
@@ -189,11 +190,11 @@ namespace emplex {
       if (start_pos >= std::ssize(in))
         return {0, "", cur_line};
 
-      size_t cur_pos = start_pos; // Position in the input that we are actively analyzing
-      int best_pos = start_pos;   // Best look-ahead we've found so far
-      int cur_state = 0;          // Next state for the DFA analysis
-      int cur_stop = 0;           // Current "stop" state (or 0 if we can't stop here)
-      int best_stop = -1;         // Best stop state found so far?
+      int cur_pos = start_pos;  // Position in the input that we are actively analyzing
+      int best_pos = start_pos; // Best look-ahead we've found so far
+      int cur_state = 0;        // Next state for the DFA analysis
+      int cur_stop = 0;         // Current "stop" state (or 0 if we can't stop here)
+      int best_stop = -1;       // Best stop state found so far?
 
       // If we are at the START OF A LINE, send a DFA::SYMBOL_START
       if (start_pos == 0 || in[start_pos - 1] == '\n') {
