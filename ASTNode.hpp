@@ -14,10 +14,10 @@ class ASTNode {
 public:
   enum Type {
     EMPTY = 0,
+    STATEMENT_BLOCK,
     ASSIGN,
     VARIABLE,
     VALUE,
-    STATEMENT,
     PRINT,
   };
 
@@ -54,6 +54,8 @@ private:
 
 public:
   ASTNode() {};
+  ASTNode(Type type)
+      : type{type} {};
   ASTNode(Type type, emplex::Token token)
       : type{type}, token(token) {};
 
@@ -67,8 +69,8 @@ public:
 
   // CODE TO EXECUTE THIS NODE (AND ITS CHILDREN, AS NEEDED).
   double Run(SymbolTable &symbols) {
-    if (GetType() == Type::EMPTY) {
-      logger << "Running empty" << std::endl;
+    if (GetType() == Type::EMPTY || GetType() == Type::STATEMENT_BLOCK) {
+      logger << "Running " << GetType() << std::endl;
       for (auto children : child) {
         children->Run(symbols);
       }

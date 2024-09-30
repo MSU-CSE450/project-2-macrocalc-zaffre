@@ -22,8 +22,8 @@ private:
   emplex::Lexer lexer{}; // Build the lexer object
   std::vector<emplex::Token> tokens;
   std::size_t current_token;
-  ASTNode root;
   SymbolTable table;
+  std::shared_ptr<ASTNode> root = std::make_shared<ASTNode>(ASTNode(ASTNode::Type::STATEMENT_BLOCK));
 
   // == HELPER ==
   emplex::Token GetNext() {
@@ -54,9 +54,27 @@ public:
   }
 
   void parse() {
+    // Push initial scope
+    table.PushScope();
     // Parse and create the AST
-    while (current_token < tokens.size()) {
-      root.AddChild(ParseStatement());
+    parseTokens(root, table.GetScopeCount());
+  }
+
+  void parseTokens(std::shared_ptr<ASTNode> currRoot, std::size_t scopeSizeBefore) {
+    logger << "Started parsing token scope. Current scope: " << scopeSizeBefore << std::endl;
+    while (current_token < tokens.size() && table.GetScopeCount() >= scopeSizeBefore) {
+      currRoot->AddChild(ParseStatement());
+    }
+
+    logger << "Ended parsing token scope. Current scope: " << table.GetScopeCount() << std::endl;
+    // After parsing, check if there are any open brackets
+    std::size_t scopeSizeAfter = table.GetScopeCount();
+    if (scopeSizeBefore - scopeSizeAfter > 1) {
+      std::size_t tokenPost = current_token;
+      if (current_token >= tokens.size())
+        --tokenPost;
+      emplex::Token lastToken = tokens.at(tokenPost);
+      throw Err(lastToken.line_id, "Expected }");
     }
   }
 
@@ -70,9 +88,9 @@ public:
       case Lexer::ID_ID:
         return ParseId();
       case Lexer::ID_OPEN_SCOPE:
-        // openScope();
+        return ParseOpenScope();
       case Lexer::ID_CLOSE_SCOPE:
-        // closeScope();
+        return ParseCloseScope();
       default:
         return ParseExpression();
     }
@@ -144,7 +162,25 @@ public:
     return node;
   }
 
+  std::shared_ptr<ASTNode> ParseOpenScope() {
+    auto openToken = GetCurrent();
+    auto statementBlockToken = std::make_shared<ASTNode>(ASTNode(ASTNode::Type::STATEMENT_BLOCK, openToken));
+
+    table.PushScope();
+
+    MoveNext();
+
+    parseTokens(statementBlockToken, table.GetScopeCount());
+
+    return statementBlockToken;
+  }
+
+  std::shared_ptr<ASTNode> ParseCloseScope() {
+    table.PopScope();
+    return std::make_shared<ASTNode>(ASTNode());
+  }
+
   void execute() {
-    root.Run(table);
+    root->Run(table);
   }
 };

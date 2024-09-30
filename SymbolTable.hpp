@@ -40,7 +40,7 @@ public:
 
   size_t AddVar(std::string name, size_t lineNumber) {
     if (scopes.empty()) {
-      PushScope();
+      throw Err(lineNumber, "Scope not initialized");
     }
 
     std::size_t id = variables.size();
@@ -50,18 +50,11 @@ public:
 
   /// Set/Get by id
   double GetValue(int lineNumber, size_t id) const {
-    if (variables.at(id).use_count() > 1) {
-      return variables.at(id)->value;
-    }
-    throw Err(lineNumber, "Variable " + variables.at(id)->name + "does not exist");
+    return variables.at(id)->value;
   }
 
   void SetValue(int lineNumber, size_t id, double value) {
-    if (variables.at(id).use_count() > 1) {
-      variables.at(id)->value = value;
-      return;
-    }
-    throw Err(lineNumber, "Variable " + variables.at(id)->name + "does not exist");
+    variables.at(id)->value = value;
   }
 
   /// Set/Get by name
@@ -85,5 +78,9 @@ public:
 
   void SetValue(int lineNumber, std::string name, double value) {
     scopes.back().SetVar(lineNumber, name, value);
+  }
+
+  std::size_t GetScopeCount() {
+    return scopes.size();
   }
 };
