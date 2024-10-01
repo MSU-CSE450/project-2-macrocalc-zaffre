@@ -41,7 +41,7 @@ private:
     logger << "Running print with children: " << child.size() << std::endl;
     for (auto children : child) {
       children->Run(symbols);
-      children->PrintNode(std::cout, symbols);
+      children->PrintNode(std::cout);
     }
     std::cout << std::endl;
   }
@@ -57,15 +57,8 @@ private:
     SetValue(symbols.GetValue(0, GetId()));
   }
 
-  void PrintNode(std::ostream &stream, SymbolTable &symbols) {
-    if (GetType() == ASTNode::Type::EXPRESSION) {
-      RunExpression(symbols);
-      stream << GetValue();
-    } else if (GetType() == ASTNode::Type::VALUE) {
-      stream << GetValue();
-    } else if (GetType() == ASTNode::Type::VARIABLE) {
-      stream << symbols.GetValue(0, GetId());
-    }
+  void PrintNode(std::ostream &stream) {
+    stream << GetValue();
   };
 
 public:
@@ -79,7 +72,6 @@ public:
     child.push_back(node);
   }
 
-  // CODE TO EXECUTE THIS NODE (AND ITS CHILDREN, AS NEEDED).
   double Run(SymbolTable &symbols) {
     if (GetType() == Type::EMPTY || GetType() == Type::STATEMENT_BLOCK) {
       logger << "Running type: " << GetType() << std::endl;
